@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>APOC Survival — Live Campaign Tracker</title>
+<style>
+  :root{
+    --bg:#17191c; --bg2:#1f2226; --panel:#24272c; --panel2:#2b2e34;
+    --line:#3a3e45; --text:#d7d9dc; --dim:#9aa0a6; --faint:#6e747b;
+    --accent:#b9a86a; --accent-dim:#8a7f52; --danger:#b0563f;
+    --pill:#33373d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#1b1d20,#141518 240px) var(--bg);
+    color:var(--text);font-family:Georgia,'Times New Roman',serif;line-height:1.45}
+  header{padding:26px 20px 10px;text-align:center;border-bottom:1px solid var(--line)}
+  h1{margin:0;font-size:1.7rem;letter-spacing:.04em;font-weight:normal}
+  .sub{color:var(--dim);font-style:italic;margin-top:6px}
+  .sky{color:var(--faint);font-size:.92rem;margin-top:10px}
+  .wrap{max-width:980px;margin:0 auto;padding:16px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
+  .toolbar input[type=search]{flex:1;min-width:200px;background:var(--bg2);color:var(--text);
+    border:1px solid var(--line);border-radius:6px;padding:9px 12px;font-family:inherit}
+  button{background:var(--panel2);color:var(--text);border:1px solid var(--line);
+    border-radius:6px;padding:8px 14px;cursor:pointer;font-family:inherit;font-size:.95rem}
+  button:hover{border-color:var(--accent-dim);color:#fff}
+  button.primary{background:var(--accent-dim);border-color:var(--accent);color:#101112;font-weight:bold}
+  button.danger:hover{border-color:var(--danger);color:#f0b9a8}
+  nav.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:0}
+  nav.tabs button{border-bottom:none;border-radius:8px 8px 0 0;background:transparent;color:var(--dim)}
+  nav.tabs button.active{background:var(--panel);color:var(--text);border-color:var(--line)}
+  .counts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:16px 0}
+  .count{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;text-align:center}
+  .count b{display:block;font-size:1.5rem;color:var(--accent);font-weight:normal}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:14px 16px;margin:10px 0}
+  .card h3{margin:0 0 4px;font-size:1.08rem;font-weight:normal}
+  .meta{color:var(--dim);font-size:.86rem;margin-bottom:6px}
+  .pill{display:inline-block;background:var(--pill);border:1px solid var(--line);
+    border-radius:20px;padding:1px 9px;font-size:.78rem;color:var(--dim);margin-right:6px}
+  .pill.cat{color:var(--accent);border-color:var(--accent-dim)}
+  .detail{white-space:pre-wrap;color:var(--text)}
+  .pinned{color:var(--accent);font-size:.9rem;margin-top:6px}
+  .links{margin-top:6px;font-size:.9rem;word-break:break-all}
+  .links a{color:var(--accent)}
+  .card .actions{margin-top:10px;display:flex;gap:8px}
+  .card .actions button{padding:5px 10px;font-size:.85rem}
+  form.entry{background:var(--panel);border:1px solid var(--accent-dim);border-radius:8px;
+    padding:16px;margin:14px 0}
+  form.entry label{display:block;font-size:.85rem;color:var(--dim);margin:10px 0 4px}
+  form.entry input,form.entry select,form.entry textarea{width:100%;background:var(--bg2);
+    color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-family:inherit}
+  form.entry textarea{min-height:110px}
+  .notice{background:var(--bg2);border:1px solid var(--line);border-radius:8px;
+    padding:12px 16px;color:var(--dim);font-size:.92rem;margin:16px 0}
+  .err{background:#3a2320;border:1px solid var(--danger);color:#f0c4b8;border-radius:8px;
+    padding:12px 16px;margin:14px 0;display:none}
+  footer{color:var(--faint);text-align:center;padding:26px 16px 40px;font-size:.88rem}
+  a{color:var(--accent)}
+  .empty{color:var(--faint);font-style:italic;padding:18px 4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>APOC Survival — Live Campaign Tracker</h1>
+  <div class="sub">The Bastion of Last Hope · 2701 DR · one shared board for the whole table</div>
+  <div class="sky">The sky: the Fog of Life, grey or worse. No sun. No stars. It is always foggy to some degree.</div>
+</header>
+<div class="wrap">
+  <div class="notice">
+    <strong>This board is live and shared.</strong> Anything anyone adds here is saved on the
+    server and shows up for everybody — that's the point of it. There is no private or DM-secret
+    material on this board, by design; secrets live only in Shaun's private tracker.
+    Sister pages: <a href="https://muse.ai/s/apoc-survival-campaign-tracker-xpq6k3gxo7xmql/YesNcBOQkgFeBZf6vWCbiMTYsAvozLrdwCbsZ2jgoSE">the public APOC page</a> ·
+    <a href="https://11durrum11.github.io/Blendcrafter/">Blendcrafter</a> ·
+    <a href="https://11durrum11.github.io/APOC-Weather-Engine/">APOC Weather Engine</a>
+  </div>
+  <div class="err" id="errBox"></div>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="Search everything on the board…">
+    <button id="addBtn" class="primary">+ Add entry</button>
+    <button id="refreshBtn">↻ Refresh</button>
+  </div>
+  <form class="entry" id="entryForm" style="display:none">
+    <input type="hidden" id="fId">
+    <label>Category</label>
+    <select id="fCategory"></select>
+    <label>Title *</label>
+    <input id="fTitle" required maxlength="300">
+    <label>Status</label>
+    <input id="fStatus" maxlength="200">
+    <label>Date label</label>
+    <input id="fDate" maxlength="120">
+    <label>Details</label>
+    <textarea id="fDetail"></textarea>
+    <label>Links (e.g. a Blendcrafter build link)</label>
+    <input id="fLinks">
+    <div style="margin-top:14px;display:flex;gap:8px">
+      <button type="submit" class="primary">Save entry</button>
+      <button type="button" id="cancelBtn">Cancel</button>
+    </div>
+  </form>
+  <main id="main"></main>
+</div>
+<footer>APOC Survival · Live board — additions stick, for everybody. DM secrets are never kept here.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL      = "https://gjvebpbxggmumtslidej.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_lHurlKltZPfNQ5VviUv90g_yiQ7xZSl";
+
+const TABS = [
+  {id:'overview', label:'Overview',            cats:null},
+  {id:'people',   label:'People',              cats:['npc']},
+  {id:'quests',   label:'Quests',              cats:['quest']},
+  {id:'world',    label:'World',               cats:['location','faction']},
+  {id:'journal',  label:'Journal & AI DM',     cats:['aidm']},
+  {id:'time',     label:'Timeline & Calendar', cats:['timeline','event']},
+  {id:'lore',     label:'Lore & Threads',      cats:['note','thread']},
+];
+const CAT_LABEL = {npc:'Person', location:'Location', faction:'Faction', quest:'Quest',
+  timeline:'Timeline', event:'Festival / Event', note:'Lore note', thread:'Thread', aidm:'AI DM'};
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let entries = [], activeTab = 'overview', query = '';
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+
+function showErr(msg){ const b=$('errBox'); b.textContent=msg; b.style.display='block'; }
+function hideErr(){ $('errBox').style.display='none'; }
+
+function buildTabs(){
+  $('tabs').innerHTML = TABS.map(t=>{
+    const n = t.cats ? entries.filter(e=>t.cats.includes(e.category)).length : entries.length;
+    return `<button data-tab="${t.id}" class="${t.id===activeTab?'active':''}">${t.label} (${n})</button>`;
+  }).join('');
+  $('tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{activeTab=b.dataset.tab; render();});
+  const sel=$('fCategory');
+  sel.innerHTML = Object.keys(CAT_LABEL).map(c=>`<option value="${c}">${CAT_LABEL[c]}</option>`).join('');
+}
+
+function card(e){
+  const meta=[e.status?`<span class="pill">${esc(e.status)}</span>`:'',
+              e.date_label?`<span class="pill">${esc(e.date_label)}</span>`:''].join('');
+  return `<article class="card">
+    <h3>${esc(e.title)}</h3>
+    <div class="meta"><span class="pill cat">${CAT_LABEL[e.category]||e.category}</span>${meta}</div>
+    ${e.detail?`<div class="detail">${esc(e.detail)}</div>`:''}
+    ${e.pinned?`<div class="pinned">📌 ${esc(e.pinned)}</div>`:''}
+    ${e.links?`<div class="links">${linkify(e.links)}</div>`:''}
+    <div class="actions">
+      <button data-edit="${e.id}">Edit</button>
+      <button data-del="${e.id}" class="danger">Delete</button>
+    </div></article>`;
+}
+
+function render(){
+  buildTabs();
+  const q = query.trim().toLowerCase();
+  const match = e => !q || [e.title,e.status,e.detail,e.date_label,e.links].join(' ').toLowerCase().includes(q);
+  const tab = TABS.find(t=>t.id===activeTab);
+  let html='';
+  if(activeTab==='overview'){
+    html += `<div class="counts">` + TABS.slice(1).map(t=>
+      `<div class="count"><b>${entries.filter(e=>t.cats.includes(e.category)).length}</b>${t.label}</div>`).join('') + `</div>`;
+    const recent = entries.filter(match).slice(0,12);
+    html += `<h2 style="font-weight:normal">Most recent</h2>` +
+      (recent.length? recent.map(card).join('') : `<div class="empty">Nothing here yet.</div>`);
+  } else {
+    const list = entries.filter(e=>tab.cats.includes(e.category)).filter(match);
+    html = list.length? list.map(card).join('') : `<div class="empty">Nothing in this tab yet — add the first entry.</div>`;
+  }
+  $('main').innerHTML = html;
+  $('main').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openForm(+b.dataset.edit));
+  $('main').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>delEntry(+b.dataset.del));
+}
+
+async function load(){
+  hideErr();
+  const {data, error} = await db.from('entries').select('*').order('created_at',{ascending:false}).limit(2000);
+  if(error){ showErr("Couldn't load the board — it may be waking up. Wait a few seconds and hit Refresh."); return; }
+  entries = data || [];
+  render();
+}
+
+function openForm(id){
+  const f=$('entryForm'); f.reset(); $('fId').value='';
+  const tab=TABS.find(t=>t.id===activeTab);
+  if(tab && tab.cats) $('fCategory').value = tab.cats[0];
+  if(id){
+    const e=entries.find(x=>x.id===id); if(!e) return;
+    $('fId').value=e.id; $('fCategory').value=e.category; $('fTitle').value=e.title||'';
+    $('fStatus').value=e.status||''; $('fDate').value=e.date_label||'';
+    $('fDetail').value=e.detail||''; $('fLinks').value=e.links||'';
+  }
+  f.style.display='block'; f.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+async function delEntry(id){
+  const e=entries.find(x=>x.id===id);
+  if(!confirm(`Delete "${e?e.title:id}" from the shared board? Everybody will stop seeing it.`)) return;
+  const {error} = await db.from('entries').delete().eq('id',id);
+  if(error){ showErr("That delete didn't go through — try Refresh and again."); return; }
+  await load();
+}
+
+$('entryForm').onsubmit = async ev=>{
+  ev.preventDefault(); hideErr();
+  const row={ category:$('fCategory').value, title:$('fTitle').value.trim(),
+    status:$('fStatus').value.trim()||null, date_label:$('fDate').value.trim()||null,
+    detail:$('fDetail').value.trim()||null, links:$('fLinks').value.trim()||null,
+    visibility:'shared' };
+  if(!row.title) return;
+  const id=$('fId').value;
+  const {error} = id ? await db.from('entries').update(row).eq('id',+id)
+                     : await db.from('entries').insert(row);
+  if(error){ showErr("That save didn't go through — check your connection and try again."); return; }
+  $('entryForm').style.display='none';
+  await load();
+};
+$('addBtn').onclick=()=>openForm();
+$('cancelBtn').onclick=()=>$('entryForm').style.display='none';
+$('refreshBtn').onclick=load;
+$('search').oninput=ev=>{query=ev.target.value; render();};
+
+load();
+db.channel('entries-live')
+  .on('postgres_changes',{event:'*',schema:'public',table:'entries'},()=>load())
+  .subscribe();
+</script>
+</body>
+</html>
