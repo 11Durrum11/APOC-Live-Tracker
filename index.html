@@ -171,6 +171,7 @@ const CAT_LABEL = {npc:'Person', location:'Location', faction:'Faction', quest:'
 
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let entries = [], activeTab = 'overview', query = '';
+let recentOpen = false;
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -214,13 +215,15 @@ function render(){
     html += `<div class="counts">` + TABS.slice(1).map(t=>
       `<div class="count"><b>${entries.filter(e=>t.cats.includes(e.category)).length}</b>${t.label}</div>`).join('') + `</div>`;
     const recent = entries.filter(match).slice(0,12);
-    html += `<h2 style="font-weight:normal">Most recent</h2>` +
-      (recent.length? recent.map(card).join('') : `<div class="empty">Nothing here yet.</div>`);
+    html += `<h2 style="font-weight:normal"><button id="recentToggle" style="background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0">${recentOpen?'▾':'▸'} Most recent (${recent.length})</button></h2>` +
+      (recentOpen ? (recent.length? recent.map(card).join('') : `<div class="empty">Nothing here yet.</div>`) : '');
   } else {
     const list = entries.filter(e=>tab.cats.includes(e.category)).filter(match);
     html = list.length? list.map(card).join('') : `<div class="empty">Nothing in this tab yet — add the first entry.</div>`;
   }
   $('main').innerHTML = html;
+  const rt = $('main').querySelector('#recentToggle');
+  if(rt) rt.onclick=()=>{recentOpen=!recentOpen; render();};
   $('main').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openForm(+b.dataset.edit));
   $('main').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>delEntry(+b.dataset.del));
 }
