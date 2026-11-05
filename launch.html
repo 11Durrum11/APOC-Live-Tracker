@@ -5,21 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<title>APOC Live Tracker — opening the newest version…</title>
+<title>APOC Survival — Campaign Tracker — opening the newest version…</title>
 <style>
   body{margin:0;background:#141518;color:#9aa0a6;font-family:Georgia,serif;
     display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}
 </style>
 </head>
 <body>
-<p>Opening the newest version of the Live Tracker…</p>
+<p>Opening the newest version of the Campaign Tracker…</p>
 <script>
-  // Always-newest launcher: read the current version stamp with caching
-  // disabled, then jump to the app with that stamp on the address so the
-  // phone can never serve a stale cached copy. Any failure falls back to
-  // a fresh timestamp, which busts the cache just the same.
-  function go(stamp){ location.replace('./?v=' + encodeURIComponent(stamp)); }
-  fetch('version.json', { cache: 'no-store' })
+  // One tracker only (2026-11-04): the Live Tracker moved into the
+  // Campaign Tracker. This launcher now reads the Campaign Tracker's
+  // version stamp (same always-newest pattern) and jumps straight there.
+  var TARGET = 'https://11durrum11.github.io/APOC-Campaign-Tracker/';
+  function go(stamp){ location.replace(TARGET + '?v=' + encodeURIComponent(stamp)); }
+  fetch(TARGET + 'version.json', { cache: 'no-store' })
     .then(function(r){ return r.json(); })
     .then(function(d){ go(d && d.version ? d.version : Date.now()); })
     .catch(function(){ go(Date.now()); });
